@@ -3,106 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Number Guessing Game</title>
+    <title>Car Racing Game</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            text-align: center;
-            background-color: #f7f7f7;
-            margin-top: 50px;
+            margin: 0;
+            overflow: hidden;
+            background-color: #e0e0e0;
         }
-        .game-container {
-            background-color: #fff;
-            padding: 20px;
+
+        #gameArea {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background-color: #333;
+            overflow: hidden;
+        }
+
+        .car {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            width: 50px;
+            height: 100px;
+            background-color: red;
             border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-            width: 300px;
-            margin: auto;
         }
-        input[type="number"] {
-            padding: 10px;
-            width: 100px;
-            border: 2px solid #ddd;
-            border-radius: 5px;
+
+        .obstacle {
+            position: absolute;
+            width: 50px;
+            height: 100px;
+            background-color: blue;
+            border-radius: 10px;
         }
-        button {
-            padding: 10px 20px;
-            background-color: #28a745;
-            border: none;
-            border-radius: 5px;
+
+        #score {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            font-size: 24px;
             color: white;
-            cursor: pointer;
-            font-size: 16px;
-            margin-top: 10px;
-        }
-        button:hover {
-            background-color: #218838;
-        }
-        .message {
-            margin-top: 20px;
-            font-size: 18px;
-        }
-        .restart-btn {
-            background-color: #007bff;
-        }
-        .restart-btn:hover {
-            background-color: #0056b3;
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
-    <div class="game-container">
-        <h1>Number Guessing Game</h1>
-        <p>Guess the number between 1 and 100</p>
-
-        <input type="number" id="guessInput" min="1" max="100">
-        <button onclick="checkGuess()">Guess</button>
-
-        <p id="message" class="message"></p>
-
-        <button id="restartButton" class="restart-btn" onclick="restartGame()" style="display: none;">Restart Game</button>
+    <div id="gameArea">
+        <div class="car" id="playerCar"></div>
+        <div id="score">Score: 0</div>
     </div>
 
     <script>
-        let targetNumber;
-        let attempts;
+        const gameArea = document.getElementById('gameArea');
+        const playerCar = document.getElementById('playerCar');
+        const scoreElement = document.getElementById('score');
 
-        // Function to start a new game
-        function startGame() {
-            targetNumber = Math.floor(Math.random() * 100) + 1;
-            attempts = 0;
-            document.getElementById("message").textContent = "";
-            document.getElementById("restartButton").style.display = "none";
+        let score = 0;
+        let gameInterval;
+        let moveSpeed = 5;
+        let carPositionX = window.innerWidth / 2 - 25; // Start position in the center
+        let carSpeed = 15;
+        let obstacles = [];
+        let isGameOver = false;
+
+        playerCar.style.left = carPositionX + 'px';
+
+        function generateObstacle() {
+            const obstacle = document.createElement('div');
+            obstacle.classList.add('obstacle');
+            obstacle.style.left = Math.floor(Math.random() * (window.innerWidth - 50)) + 'px';
+            obstacle.style.top = '-100px'; // Start off-screen
+            gameArea.appendChild(obstacle);
+            obstacles.push(obstacle);
         }
 
-        // Function to check the player's guess
-        function checkGuess() {
-            const guess = parseInt(document.getElementById("guessInput").value);
-            if (isNaN(guess) || guess < 1 || guess > 100) {
-                document.getElementById("message").textContent = "Please enter a valid number between 1 and 100.";
+        function moveObstacles() {
+            obstacles.forEach(obstacle => {
+                let obstacleTop = parseInt(obstacle.style.top.replace('px', ''));
+                if (obstacleTop >= window.innerHeight) {
+                    obstacle.remove();
+                    obstacles = obstacles.filter(obj => obj !== obstacle);
+                    score++;
+                    scoreElement.textContent = 'Score: ' + score;
+                } else {
+                    obstacle.style.top = obstacleTop + 5 + 'px'; // Move downwards
+                }
+            });
+        }
+
+        function checkCollision() {
+            obstacles.forEach(obstacle => {
+                let obstacleLeft = parseInt(obstacle.style.left.replace('px', ''));
+                let obstacleTop = parseInt(obstacle.style.top.replace('px', ''));
+                let playerLeft = parseInt(playerCar.style.left.replace('px', ''));
+                let playerTop = parseInt(playerCar.style.top.replace('px', ''));
+
+                if (
+                    obstacleTop + 100 > window.innerHeight - 100 &&
+                    obstacleLeft < playerLeft + 50 &&
+                    obstacleLeft + 50 > playerLeft
+                ) {
+                    isGameOver = true;
+                    alert('Game Over! Final Score: ' + score);
+                    clearInterval(gameInterval);
+                }
+            });
+        }
+
+        function moveCar(e) {
+            if (e.key === 'ArrowLeft' && carPositionX > 0) {
+                carPositionX -= carSpeed;
+            } else if (e.key === 'ArrowRight' && carPositionX < window.innerWidth - 50) {
+                carPositionX += carSpeed;
+            }
+            playerCar.style.left = carPositionX + 'px';
+        }
+
+        function startGame() {
+            if (isGameOver) {
                 return;
             }
 
-            attempts++;
-            if (guess === targetNumber) {
-                document.getElementById("message").textContent = `Correct! You guessed the number in ${attempts} attempts. 🎉`;
-                document.getElementById("restartButton").style.display = "inline-block";
-            } else if (guess < targetNumber) {
-                document.getElementById("message").textContent = "Too low! Try again.";
-            } else {
-                document.getElementById("message").textContent = "Too high! Try again.";
-            }
+            gameInterval = setInterval(() => {
+                generateObstacle();
+                moveObstacles();
+                checkCollision();
+            }, 1000);
+
+            setInterval(() => {
+                if (!isGameOver) {
+                    generateObstacle();
+                }
+            }, 2000);
         }
 
-        // Function to restart the game
-        function restartGame() {
-            startGame();
-            document.getElementById("guessInput").value = "";
-        }
+        window.addEventListener('keydown', moveCar);
 
-        // Start the game when the page loads
-        window.onload = startGame;
+        startGame();
     </script>
 
 </body>
