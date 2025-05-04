@@ -3,45 +3,107 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Whack-a-Mole Game</title>
+    <title>Number Guessing Game</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Arial', sans-serif;
             text-align: center;
             background-color: #f7f7f7;
-        }
-        .game-board {
-            display: grid;
-            grid-template-columns: repeat(5, 100px);
-            grid-template-rows: repeat(5, 100px);
-            gap: 10px;
-            justify-content: center;
             margin-top: 50px;
         }
-        .mole {
-            width: 80px;
-            height: 80px;
-            background-color: #555;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: white;
-            font-size: 20px;
-            cursor: pointer;
+        .game-container {
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            width: 300px;
+            margin: auto;
         }
-        .hidden {
-            display: none;
+        input[type="number"] {
+            padding: 10px;
+            width: 100px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #28a745;
+            border: none;
+            border-radius: 5px;
+            color: white;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .message {
+            margin-top: 20px;
+            font-size: 18px;
+        }
+        .restart-btn {
+            background-color: #007bff;
+        }
+        .restart-btn:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
 <body>
 
-    <h1>Whack-a-Mole Game</h1>
-    <p>Click on the mole to score!</p>
+    <div class="game-container">
+        <h1>Number Guessing Game</h1>
+        <p>Guess the number between 1 and 100</p>
 
-    <div class="game-board" id="gameBoard"></div>
+        <input type="number" id="guessInput" min="1" max="100">
+        <button onclick="checkGuess()">Guess</button>
+
+        <p id="message" class="message"></p>
+
+        <button id="restartButton" class="restart-btn" onclick="restartGame()" style="display: none;">Restart Game</button>
+    </div>
 
     <script>
-        const gameBoard = document.getElementById('gameBoard');
-        const boardSize = 25;
+        let targetNumber;
+        let attempts;
+
+        // Function to start a new game
+        function startGame() {
+            targetNumber = Math.floor(Math.random() * 100) + 1;
+            attempts = 0;
+            document.getElementById("message").textContent = "";
+            document.getElementById("restartButton").style.display = "none";
+        }
+
+        // Function to check the player's guess
+        function checkGuess() {
+            const guess = parseInt(document.getElementById("guessInput").value);
+            if (isNaN(guess) || guess < 1 || guess > 100) {
+                document.getElementById("message").textContent = "Please enter a valid number between 1 and 100.";
+                return;
+            }
+
+            attempts++;
+            if (guess === targetNumber) {
+                document.getElementById("message").textContent = `Correct! You guessed the number in ${attempts} attempts. 🎉`;
+                document.getElementById("restartButton").style.display = "inline-block";
+            } else if (guess < targetNumber) {
+                document.getElementById("message").textContent = "Too low! Try again.";
+            } else {
+                document.getElementById("message").textContent = "Too high! Try again.";
+            }
+        }
+
+        // Function to restart the game
+        function restartGame() {
+            startGame();
+            document.getElementById("guessInput").value = "";
+        }
+
+        // Start the game when the page loads
+        window.onload = startGame;
+    </script>
+
+</body>
+</html>
